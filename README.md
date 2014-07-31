@@ -2,6 +2,8 @@
 
 DynamoDB backend for Mandoline.
 
+[![Build Status](https://travis-ci.org/TheClimateCorporation/mandoline-dynamodb.svg?branch=master)](https://travis-ci.org/TheClimateCorporation/mandoline-dynamodb)
+
 ## Usage
 
 [![Clojars Project](http://clojars.org/io.mandoline/mandoline-dynamodb/latest-version.svg)](http://clojars.org/io.mandoline/mandoline-dynamodb)
