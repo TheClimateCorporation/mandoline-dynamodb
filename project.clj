@@ -5,7 +5,7 @@
             :distribution :repo}
   :min-lein-version "2.0.0"
   :url
-    "https://github.com/TheClimateCorporation/mandoline"
+    "https://github.com/TheClimateCorporation/mandoline-dynamodb"
   :mailing-lists
     [{:name "mandoline-users@googlegroups.com"
       :archive "https://groups.google.com/d/forum/mandoline-users"

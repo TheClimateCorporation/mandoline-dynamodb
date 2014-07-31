@@ -4,7 +4,7 @@ DynamoDB backend for Mandoline.
 
 ## Usage
 
-        [io.mandoline/mandoline-dynamodb "0.1.1"]
+[![Clojars Project](http://clojars.org/io.mandoline/mandoline-dynamodb/latest-version.svg)](http://clojars.org/io.mandoline/mandoline-dynamodb)
 
 ## About the tests
 
