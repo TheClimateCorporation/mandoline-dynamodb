@@ -660,7 +660,9 @@
                             role-arn
                             session-name)
                   :else (DefaultAWSCredentialsProviderChain.))]
-    (merge store-spec {:provider provider})))
+    (-> store-spec
+      (dissoc :role-arn)
+      (merge {:provider provider}))))
 
 (defn root-table-prefix
   "Given a DynamoDBSchema root, construct a root prefix for naming the
