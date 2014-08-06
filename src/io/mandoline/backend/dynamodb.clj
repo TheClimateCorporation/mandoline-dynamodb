@@ -666,17 +666,6 @@
 
 (defn root-table-prefix
   "Given a DynamoDBSchema root, construct a root prefix for naming the
-  associated DynamoDB tables."
-  ([root db-version]
-   (->> (string/split root #"[.]+")
-     (reverse)
-     (#(if db-version (cons db-version %) %))
-     (string/join ".")))
-  ([root]
-   (root-table-prefix root nil)))
-
-(defn- root-table-prefix
-  "Given a DynamoDBSchema root, construct a root prefix for naming the
   associated DynamoDB tables.
 
   This function reverses the components of the provided DynamoDBSchema
