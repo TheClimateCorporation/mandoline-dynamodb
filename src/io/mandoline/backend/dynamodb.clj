@@ -96,7 +96,7 @@
   [client-opts]
   (with-retry *dynamodb-backoff-ms* far/list-tables client-opts))
 
-(defn- describe-table
+(defn describe-table
   [client-opts table]
   (with-retry *dynamodb-backoff-ms* far/describe-table client-opts table))
 
@@ -190,7 +190,7 @@
   [client-opts table prim-key-conds & opts]
   (with-retry *dynamodb-backoff-ms* apply far/query client-opts table prim-key-conds opts))
 
-(defn- create-table
+(defn create-table
   "Make a CreateTable request.
 
   The default behavior of this function is to poll until the table has
@@ -212,7 +212,7 @@
     (while (not (create!))
       (Thread/sleep *wait-ms*))))
 
-(defn- delete-table
+(defn delete-table
   "Make a DeleteTable request and poll until the table no longer
   exists."
   [client-opts table]
@@ -235,14 +235,22 @@
   "Construct a table name from one or more table name components.
   Keywords are automatically converted to their string names.
 
-   (get-table-name \"com.foo.dev.bar\" \"datasetname\"))
-    => \"com.foo.dev.bar.datasetname\"
+  (get-table-name \"com.foo.dev.bar\" \"datasetname\"))
+  => \"com.foo.dev.bar.datasetname\"
 
-   (get-table-name \"com.foo.dev.bar\" :datasetname))
-    => \"com.foo.dev.bar.datasetname\"
+  (get-table-name \"com.foo.dev.bar\" :datasetname))
+  => \"com.foo.dev.bar.datasetname\"
   "
   [head & more]
   (string/join \. (map name (cons head more))))
+
+(defn table-stats [client-opts table]
+  "Gets statistics on a DynamoDB table."
+  (if-let [desc (describe-table client-opts table)]
+    (:table-size-bytes desc)
+    (throw
+      (ResourceNotFoundException.
+        (str "Could not describe DynamoDB table" (name table))))))
 
 (defn- find-index
   "Recursively try to find the index coordinate in a committed version.
@@ -468,17 +476,9 @@
     (->DynamoDBChunkStore table client-opts))
 
   (get-stats [_]
-    (letfn [(stat-fn [x]
-              (let [t (get-table-name table x)
-                    desc (describe-table client-opts t)]
-                (when-not desc
-                  (throw
-                    (ResourceNotFoundException.
-                      (str "Could not describe DynamoDB table" (name t)))))
-                (:table-size-bytes desc)))]
-      {:metadata-size (stat-fn "versions")
-       :index-size (stat-fn "indices")
-       :data-size (stat-fn "chunks")}))
+    {:metadata-size (table-stats client-opts (get-table-name table "versions"))
+     :index-size (table-stats client-opts (get-table-name table "indices"))
+     :data-size (table-stats client-opts (get-table-name table "chunks"))})
 
   (metadata [_ version]
     (-> (get-metadata client-opts table version)

@@ -1,4 +1,4 @@
-(defproject io.mandoline/mandoline-dynamodb "0.1.3"
+(defproject io.mandoline/mandoline-dynamodb "0.1.4"
   :description "DynamoDB backend for Mandoline."
   :license {:name "Apache License, version 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0"
