@@ -1,4 +1,4 @@
-(defproject io.mandoline/mandoline-dynamodb "0.1.4"
+(defproject io.mandoline/mandoline-dynamodb "0.1.5"
   :description "DynamoDB backend for Mandoline."
   :license {:name "Apache License, version 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0"
@@ -24,7 +24,7 @@
      [org.clojure/core.memoize "0.5.6"]
      [joda-time/joda-time "2.1"]
      [com.taoensso/faraday "1.4.0"]
-     [io.mandoline/mandoline-core "0.1.4"]]
+     [io.mandoline/mandoline-core "0.1.5"]]
   :exclusions [org.clojure/clojure]
 
   :aliases {"docs" ["marg" "-d" "target"]
