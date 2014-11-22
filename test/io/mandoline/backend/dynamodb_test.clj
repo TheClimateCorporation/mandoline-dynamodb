@@ -164,7 +164,7 @@
   (let [chunk-store (ddb/->DynamoDBChunkStore :table :client)]
     (testing "DynamoDBChunkStore read-chunk throws an exception if chunk is not found."
       (doseq [get-item-return-value [nil {}]]
-        (with-redefs [ddb/get-item*binary-safe (constantly {})]
+        (with-redefs [ddb/get-item*binary-safe (constantly get-item-return-value)]
           (is (thrown-with-msg? IllegalArgumentException
                                 #"No chunk was found"
                                 (proto/read-chunk chunk-store "non-existent-hash"))))))

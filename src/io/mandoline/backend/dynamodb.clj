@@ -359,7 +359,7 @@
                           (str
                             "Eventually consistent read did not find item for "
                             "hash %s; retrying with strongly consistent read.")
-                           hash)
+                          hash)
                         (read-a-chunk client-opts table hash true)))]
       (:v item)
       (throw
