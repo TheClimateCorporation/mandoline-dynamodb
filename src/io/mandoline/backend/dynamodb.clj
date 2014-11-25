@@ -339,12 +339,13 @@
     "Reading chunk %s with %s consistency"
     hash
     (if consistent? "strong" "eventual"))
-  (get-item*binary-safe
-    client-opts
-    (get-table-name table "chunks")
-    {:k hash}
-    {:consistent? consistent?
-     :attrs [:k :v :r]}))
+  (let [item (get-item*binary-safe
+               client-opts
+               (get-table-name table "chunks")
+               {:k hash}
+               {:consistent? consistent?
+                :attrs [:k :v :r]})]
+    (when (seq item) item)))
 
 (deftype DynamoDBChunkStore [table client-opts]
   proto/ChunkStore

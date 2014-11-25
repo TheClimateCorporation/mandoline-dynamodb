@@ -7,10 +7,11 @@
     [io.mandoline :as db]
     [io.mandoline.impl :as impl]
     [io.mandoline.slice :as slice]
+    [io.mandoline.impl.protocol :as proto]
     [io.mandoline.backend.dynamodb :as ddb]
     [io.mandoline.test.utils :refer [random-name
-                                             with-and-without-caches
-                                             with-temp-db]]
+                                     with-and-without-caches
+                                     with-temp-db]]
     [io.mandoline.test
      [concurrency :refer [lots-of-overlaps
                           lots-of-processes
@@ -158,6 +159,20 @@
       setup-chunk-store teardown-chunk-store num-chunks)
     (chunk-store/test-chunk-store-properties-multi-threaded
       setup-chunk-store teardown-chunk-store num-chunks)))
+
+(deftest ^:unit test-dynamodb-chunk-store-reads
+  (let [chunk-store (ddb/->DynamoDBChunkStore :table :client)]
+    (testing "DynamoDBChunkStore read-chunk throws an exception if chunk is not found."
+      (doseq [get-item-return-value [nil {}]]
+        (with-redefs [ddb/get-item*binary-safe (constantly get-item-return-value)]
+          (is (thrown-with-msg? IllegalArgumentException
+                                #"No chunk was found"
+                                (proto/read-chunk chunk-store "non-existent-hash"))))))
+    (testing (str "DynamoDBChunkStore read-chunk tries a strongly consistent read if"
+                  " an eventually consistent read fails.")
+      (with-redefs [ddb/read-a-chunk (fn [_ _ _ consistent?]
+                                       (when consistent? {:v :value}))]
+        (is (= :value (proto/read-chunk chunk-store "hash")))))))
 
 (deftest* test-dynamodb-schema-properties
   (let [store-specs (atom {}) ; map of Schema instance -> store-spec
