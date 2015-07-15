@@ -25,7 +25,7 @@
      [joda-time/joda-time "2.8.1"]
      [com.amazonaws/aws-java-sdk "1.10.5.1"]
      [com.taoensso/faraday "1.7.1"]
-     [io.mandoline/mandoline-core "0.1.9-SNAPSHOT"]]
+     [io.mandoline/mandoline-core "0.1.10"]]
   :exclusions [org.clojure/clojure]
 
   :aliases {"docs" ["marg" "-d" "target"]
