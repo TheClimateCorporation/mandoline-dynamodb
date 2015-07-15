@@ -84,7 +84,7 @@
       (if (re-find #"ProvisionedThroughputExceededException" (-> e .getClass .getName))
         (do
           (let [ms* (+ ms (rand-int (/ ms 2)))]
-            (log/errorf "retrying call to %s in %d milliseconds" f ms*)
+            (log/errorf "retrying call to %s in %d milliseconds" f (long ms*))
             (Thread/sleep (long ms*)))
           (apply with-retry* (* ms 1.5) f args))
         (throw e)))))
