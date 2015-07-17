@@ -350,21 +350,12 @@
                                                                        :not-needed
                                                                        {}))))))
 
-(deftest ^:unit test-with-retry*
-  (testing "with-retry* properly retries"
+(deftest ^:unit test-with-retry
+  (testing "with-retry properly retries"
     (let [num-of-tries (atom 0)
           foo (fn []
                 (when (> 5 @num-of-tries)
                   (do (swap! num-of-tries inc)
                       (throw (ProvisionedThroughputExceededException. "Try again.")))))]
-      (is (nil? (ddb/with-retry* 1 foo)))
-      (is (= @num-of-tries 5)))))
-
-(deftest ^:unit test-with-retry
-  (testing "with-retry properly retries"
-    (let [num-of-tries (atom 0)]
-      (is (nil? (ddb/with-retry 1
-                  (when (> 5 @num-of-tries)
-                    (do (swap! num-of-tries inc)
-                        (throw (ProvisionedThroughputExceededException. "Try again.")))))))
+      (is (nil? (ddb/with-retry 1 foo)))
       (is (= @num-of-tries 5)))))
