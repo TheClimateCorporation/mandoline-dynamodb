@@ -72,7 +72,7 @@
    :indices {:read 250 :write 100}
    :versions {:read 20 :write 10}})
 
-(defn with-retry*
+(defn with-retry
   "Attempt the provided function. If an exception is thrown due to AWS
   throttling, retry 'f' with randomized exponential backoff, starting in the
   range [ms, ms + 50%] milliseconds and increasing by 50% each time."
@@ -86,25 +86,16 @@
           (let [ms* (+ ms (rand-int (/ ms 2)))]
             (log/errorf "retrying call to %s in %d milliseconds" f (long ms*))
             (Thread/sleep (long ms*)))
-          (apply with-retry* (* ms 1.5) f args))
+          (apply with-retry (* ms 1.5) f args))
         (throw e)))))
-
-(defmacro with-retry
-  "Attempt the body. If an exception is thrown due to AWS throttling, retry
-  with a randomized exponential backoff, starting in the range [ms, ms + 50%]
-  milliseconds and increasing by 50% each time."
-  [ms & body]
-  `(with-retry* ~ms (fn retry-core [] ~@body)))
 
 (defn- list-tables
   [client-opts]
-  ;; Use with-retry* over with-retry for better logged function names.
-  (with-retry* *dynamodb-backoff-base-ms* far/list-tables client-opts))
+  (with-retry *dynamodb-backoff-base-ms* far/list-tables client-opts))
 
 (defn describe-table
   [client-opts table]
-  ;; Use with-retry* over with-retry for better logged function names.
-  (with-retry* *dynamodb-backoff-base-ms* far/describe-table client-opts table))
+  (with-retry *dynamodb-backoff-base-ms* far/describe-table client-opts table))
 
 (defn- table-exists?
   [client-opts table]
@@ -167,15 +158,14 @@
   faithfully returns binary attributes directly as ByteBuffer instances,
   bypassing Nippy deserialization."
   [client-opts table prim-kvs & [{:keys [attrs consistent? return-cc?]}]]
-  (with-retry *dynamodb-backoff-base-ms*
-    (as-map*binary-safe
-      (.getItem (#'far/db-client client-opts)
-        (doto-cond [g (GetItemRequest.)]
-          :always     (.setTableName       (name table))
-          :always     (.setKey             (clj-item->db-item*binary-safe prim-kvs))
-          consistent? (.setConsistentRead  g)
-          attrs       (.setAttributesToGet (mapv name g))
-          return-cc?  (.setReturnConsumedCapacity (far-utils/enum :total)))))))
+  (as-map*binary-safe
+    (.getItem (#'far/db-client client-opts)
+              (doto-cond [g (GetItemRequest.)]
+                         :always     (.setTableName       (name table))
+                         :always     (.setKey             (clj-item->db-item*binary-safe prim-kvs))
+                         consistent? (.setConsistentRead  g)
+                         attrs       (.setAttributesToGet (mapv name g))
+                         return-cc?  (.setReturnConsumedCapacity (far-utils/enum :total))))))
 
 (defn- put-item*binary-safe
   "Similar to the function taoensso.faraday/put-item, except that it
@@ -183,21 +173,19 @@
   bypassing Nippy serialization."
   [client-opts table item & [{:keys [return expected return-cc?]
                               :or   {return :none}}]]
-  (with-retry *dynamodb-backoff-base-ms*
-    (as-map*binary-safe
-      (.putItem (#'far/db-client client-opts)
-        (doto-cond [g (PutItemRequest.)]
-          :always  (.setTableName    (name table))
-          :always  (.setItem         (clj-item->db-item*binary-safe item))
-          expected (.setExpected     (#'far/expected-values g))
-          return   (.setReturnValues (far-utils/enum g))
-          return-cc? (.setReturnConsumedCapacity (far-utils/enum :total)))))))
+  (as-map*binary-safe
+    (.putItem (#'far/db-client client-opts)
+              (doto-cond [g (PutItemRequest.)]
+                         :always  (.setTableName    (name table))
+                         :always  (.setItem         (clj-item->db-item*binary-safe item))
+                         expected (.setExpected     (#'far/expected-values g))
+                         return   (.setReturnValues (far-utils/enum g))
+                         return-cc? (.setReturnConsumedCapacity (far-utils/enum :total))))))
 
 (defn- query
   ; TODO binary-safe variant of the query function
   [client-opts table prim-key-conds & opts]
-  (with-retry *dynamodb-backoff-base-ms*
-    (apply far/query client-opts table prim-key-conds opts)))
+  (apply far/query client-opts table prim-key-conds opts))
 
 (defn create-table
   "Make a CreateTable request.
@@ -331,7 +319,7 @@
              :c (last key)
              :v new-hash}
             {:expected (if (nil? old-hash)
-                         {:v false}
+                         {:v :not-exists}
                          {:c (last key) :v old-hash})})
           true
           (catch ConditionalCheckFailedException _
