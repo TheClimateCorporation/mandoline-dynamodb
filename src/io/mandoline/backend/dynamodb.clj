@@ -319,7 +319,7 @@
              :c (last key)
              :v new-hash}
             {:expected (if (nil? old-hash)
-                         {:v false}
+                         {:v :not-exists}
                          {:c (last key) :v old-hash})})
           true
           (catch ConditionalCheckFailedException _
