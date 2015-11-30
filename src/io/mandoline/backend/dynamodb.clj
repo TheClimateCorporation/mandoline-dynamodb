@@ -159,7 +159,7 @@
   faithfully returns binary attributes directly as ByteBuffer instances,
   bypassing Nippy deserialization."
   [client-opts table prim-kvs & [{:keys [attrs consistent? return-cc?]}]]
-  (ddbi/rethrow-throughput-exception-with-table table
+  (ddbi/rethrow-aws-exception-with-table table
     (as-map*binary-safe
       (.getItem (#'far/db-client client-opts)
                 (doto-cond [g (GetItemRequest.)]
@@ -175,7 +175,7 @@
   bypassing Nippy serialization."
   [client-opts table item & [{:keys [return expected return-cc?]
                               :or   {return :none}}]]
-  (ddbi/rethrow-throughput-exception-with-table table
+  (ddbi/rethrow-aws-exception-with-table table
     (as-map*binary-safe
       (.putItem (#'far/db-client client-opts)
                 (doto-cond [g (PutItemRequest.)]
@@ -188,7 +188,7 @@
 (defn- query
   ; TODO binary-safe variant of the query function
   [client-opts table prim-key-conds & opts]
-  (ddbi/rethrow-throughput-exception-with-table table
+  (ddbi/rethrow-aws-exception-with-table table
     (apply far/query client-opts table prim-key-conds opts)))
 
 (defn create-table
