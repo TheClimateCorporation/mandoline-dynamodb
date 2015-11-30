@@ -6,8 +6,9 @@
     [taoensso.encore :refer [doto-cond]]
     [taoensso.faraday :as far]
     [taoensso.faraday.utils :as far-utils]
-    [io.mandoline.utils :as utils]
-    [io.mandoline.impl.protocol :as proto])
+    [io.mandoline.backend.dynamodb.impl :as ddbi]
+    [io.mandoline.impl.protocol :as proto]
+    [io.mandoline.utils :as utils])
   (:import
     [java.net URI]
     [java.util UUID]
@@ -158,14 +159,15 @@
   faithfully returns binary attributes directly as ByteBuffer instances,
   bypassing Nippy deserialization."
   [client-opts table prim-kvs & [{:keys [attrs consistent? return-cc?]}]]
-  (as-map*binary-safe
-    (.getItem (#'far/db-client client-opts)
-              (doto-cond [g (GetItemRequest.)]
-                         :always     (.setTableName       (name table))
-                         :always     (.setKey             (clj-item->db-item*binary-safe prim-kvs))
-                         consistent? (.setConsistentRead  g)
-                         attrs       (.setAttributesToGet (mapv name g))
-                         return-cc?  (.setReturnConsumedCapacity (far-utils/enum :total))))))
+  (ddbi/rethrow-aws-exception-with-table table
+    (as-map*binary-safe
+      (.getItem (#'far/db-client client-opts)
+                (doto-cond [g (GetItemRequest.)]
+                           :always     (.setTableName       (name table))
+                           :always     (.setKey             (clj-item->db-item*binary-safe prim-kvs))
+                           consistent? (.setConsistentRead  g)
+                           attrs       (.setAttributesToGet (mapv name g))
+                           return-cc?  (.setReturnConsumedCapacity (far-utils/enum :total)))))))
 
 (defn- put-item*binary-safe
   "Similar to the function taoensso.faraday/put-item, except that it
@@ -173,19 +175,21 @@
   bypassing Nippy serialization."
   [client-opts table item & [{:keys [return expected return-cc?]
                               :or   {return :none}}]]
-  (as-map*binary-safe
-    (.putItem (#'far/db-client client-opts)
-              (doto-cond [g (PutItemRequest.)]
-                         :always  (.setTableName    (name table))
-                         :always  (.setItem         (clj-item->db-item*binary-safe item))
-                         expected (.setExpected     (#'far/expected-values g))
-                         return   (.setReturnValues (far-utils/enum g))
-                         return-cc? (.setReturnConsumedCapacity (far-utils/enum :total))))))
+  (ddbi/rethrow-aws-exception-with-table table
+    (as-map*binary-safe
+      (.putItem (#'far/db-client client-opts)
+                (doto-cond [g (PutItemRequest.)]
+                           :always  (.setTableName    (name table))
+                           :always  (.setItem         (clj-item->db-item*binary-safe item))
+                           expected (.setExpected     (#'far/expected-values g))
+                           return   (.setReturnValues (far-utils/enum g))
+                           return-cc? (.setReturnConsumedCapacity (far-utils/enum :total)))))))
 
 (defn- query
   ; TODO binary-safe variant of the query function
   [client-opts table prim-key-conds & opts]
-  (apply far/query client-opts table prim-key-conds opts))
+  (ddbi/rethrow-aws-exception-with-table table
+    (apply far/query client-opts table prim-key-conds opts)))
 
 (defn create-table
   "Make a CreateTable request.
