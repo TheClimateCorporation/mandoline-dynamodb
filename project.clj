@@ -1,4 +1,4 @@
-(defproject io.mandoline/mandoline-dynamodb "0.1.10.2-SNAPSHOT"
+(defproject io.mandoline/mandoline-dynamodb "0.1.11"
   :description "DynamoDB backend for Mandoline."
   :license {:name "Apache License, version 2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0"
@@ -27,7 +27,7 @@
      [com.amazonaws/aws-java-sdk-dynamodb "1.10.37"]
      [com.amazonaws/aws-java-sdk-sts "1.10.37"]
      [com.taoensso/faraday "1.7.1"]
-     [io.mandoline/mandoline-core "0.1.10"]]
+     [io.mandoline/mandoline-core "0.1.11"]]
   :exclusions [org.clojure/clojure]
 
   :aliases {"docs" ["marg" "-d" "target"]
